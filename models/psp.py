@@ -46,25 +46,12 @@ class pSp(nn.Module):
 
 	def load_weights(self):
 		if self.opts.checkpoint_path is not None:
-			print('Loading pSp from checkpoint: {}'.format(self.opts.checkpoint_path))
-			ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
-			self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
-			self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
-			self.__load_latent_avg(ckpt)
-		else:
 			print('Loading encoders weights from irse50!')
 			encoder_ckpt = torch.load(model_paths['ir_se50'])
-			# if input to encoder is not an RGB image, do not load the input layer weights
-			if self.opts.label_nc != 0:
-				encoder_ckpt = {k: v for k, v in encoder_ckpt.items() if "input_layer" not in k}
 			self.encoder.load_state_dict(encoder_ckpt, strict=False)
-			print('Loading decoder weights from pretrained!')
-			ckpt = torch.load(self.opts.stylegan_weights)
-			self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
-			if self.opts.learn_in_w:
-				self.__load_latent_avg(ckpt, repeat=1)
-			else:
-				self.__load_latent_avg(ckpt, repeat=self.opts.n_styles)
+			ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+			self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
+			self.__load_latent_avg(ckpt)
 
 	def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
 	            inject_latent=None, return_latents=False, alpha=None):
